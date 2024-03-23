@@ -36,15 +36,15 @@ const char* deviceID = "ESP32_DEVICE_1"; // Change this to your device ID
 void setup() {
   Serial.begin(115200);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Connecting to Wi-Fi");
+  //Serial.print("Connecting to Wi-Fi");
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
+    //Serial.print(".");
     delay(300);
   }
-  Serial.println();
-  Serial.print("Connected with IP: ");
-  Serial.println(WiFi.localIP());
-  Serial.println();
+  // Serial.println();
+  // Serial.print("Connected with IP: ");
+  // Serial.println(WiFi.localIP());
+  // Serial.println();
 
   /* Assign the api key (required) */
   config.api_key = API_KEY;
@@ -54,10 +54,10 @@ void setup() {
 
   /* Sign up */
   if (Firebase.signUp(&config, &auth, "", "")) {
-    Serial.println("ok");
+    //Serial.println("ok");
     signupOK = true;
   } else {
-    Serial.printf("%s\n", config.signer.signupError.message.c_str());
+    //Serial.printf("%s\n", config.signer.signupError.message.c_str());
   }
 
   /* Assign the callback function for the long running token generation task */
@@ -76,6 +76,11 @@ void loop()
   if (Firebase.ready())
   {
     taskCompleted = true;
+    Firebase.RTDB.setTimestamp(&fbdo, "/test/timestamp1");
+    double flop = Firebase.RTDB.getDouble(&fbdo, "/test/timestamp1");
+    Serial.printf("Get timestamp... %s\n", Firebase.RTDB.getDouble(&fbdo, "/test/timestamp1"));
+    sleep(10);
+/***
 
     Serial.printf("Set timestamp... %s\n", Firebase.RTDB.setTimestamp(&fbdo, "/test/timestamp") ? "ok" : fbdo.errorReason().c_str());
 
@@ -113,5 +118,6 @@ void loop()
     // Get previous pushed data
     Serial.printf("Get previous pushed data... %s\n", Firebase.RTDB.getJSON(&fbdo, "/test/push/data/" + fbdo.pushName()) ? fbdo.to<FirebaseJson>().raw() : fbdo.errorReason().c_str());
     sleep(10);
+    ***/ 
   }
 }
