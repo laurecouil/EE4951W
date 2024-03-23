@@ -32,11 +32,13 @@ static dwt_config_t config = {
     DWT_PDOA_M0       /* PDOA mode off */
 };
 
-static uint8_t tx_poll_msg[2][12] = {{0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '0', 0xE0, 0, 0},
-                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '1', 0xE0, 0, 0}};
+static uint8_t tx_poll_msg[3][12] = {{0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '0', 0xE0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '1', 0xE0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '2', 0xE0, 0, 0}};
 //static uint8_t tx_poll_msg[][] = {0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '2', 0xE0, 0, 0};
-static uint8_t rx_resp_msg[2][20] = {{0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '0', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '1', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+static uint8_t rx_resp_msg[3][20] = {{0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '0', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '1', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
 //static uint8_t rx_resp_msg1[] = {0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static uint8_t frame_seq_nb = 0;
@@ -45,6 +47,8 @@ static uint32_t status_reg = 0;
 static double tof;
 static double distance;
 extern dwt_txconfig_t txconfig_options;
+
+int distances_now[3] = {0,0,0};
 
 void setup()
 {
@@ -102,12 +106,14 @@ void setup()
 
 void loop()
 {
+  int i = 0;
+  while(i <= 2) {
   /* Write frame data to DW IC and prepare transmission. See NOTE 7 below. */
  // Serial.println(dwt_readtxtimestamplo32());
-  tx_poll_msg[0][ALL_MSG_SN_IDX] = frame_seq_nb;
+  tx_poll_msg[i][ALL_MSG_SN_IDX] = frame_seq_nb;
   dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_TXFRS_BIT_MASK);
-  dwt_writetxdata(sizeof(tx_poll_msg[0]), tx_poll_msg[0], 0); /* Zero offset in TX buffer. */
-  dwt_writetxfctrl(sizeof(tx_poll_msg[0]), 0, 1);          /* Zero offset in TX buffer, ranging. */
+  dwt_writetxdata(sizeof(tx_poll_msg[i]), tx_poll_msg[i], 0); /* Zero offset in TX buffer. */
+  dwt_writetxfctrl(sizeof(tx_poll_msg[i]), 0, 1);          /* Zero offset in TX buffer, ranging. */
 
   /* Start transmission, indicating that a response is expected so that reception is enabled automatically after the frame is sent and the delay
    * set by dwt_setrxaftertxdelay() has elapsed. */
@@ -137,7 +143,7 @@ void loop()
       /* Check that the frame is the expected response from the companion "SS TWR responder" example.
        * As the sequence number field of the frame is not relevant, it is cleared to simplify the validation of the frame. */
       rx_buffer[ALL_MSG_SN_IDX] = 0;
-      if (memcmp(rx_buffer, rx_resp_msg[0], ALL_MSG_COMMON_LEN) == 0)
+      if (memcmp(rx_buffer, rx_resp_msg[i], ALL_MSG_COMMON_LEN) == 0)
       {
         uint32_t poll_tx_ts, resp_rx_ts, poll_rx_ts, resp_tx_ts;
         int32_t rtd_init, rtd_resp;
@@ -163,10 +169,13 @@ void loop()
         distance = tof * SPEED_OF_LIGHT;
 
         /* Display computed distance on LCD. */
+        Serial.println(i);
         snprintf(dist_str, sizeof(dist_str), "DIST: %3.2f m", distance);
         test_run_info((unsigned char *)dist_str);
+        distances_now[i] = distance;
       }
     }
+    i++;
   }
   // else if (status_reg & SYS_STATUS_ALL_RX_TO) {
   //   Serial.println("Timeout");
@@ -181,4 +190,7 @@ void loop()
 
   /* Execute a delay between ranging exchanges. */
   Sleep(RNG_DELAY_MS);
+}
+
+//Transmit data to server
 }
