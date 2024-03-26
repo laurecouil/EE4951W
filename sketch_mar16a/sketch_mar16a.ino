@@ -4,7 +4,8 @@
 #include <WiFi.h>
 
 #include <Firebase_ESP_Client.h>
-
+#include <string>
+using namespace std;
 // Provide the token generation process info.
 #include "addons/TokenHelper.h"
 // Provide the RTDB payload printing info and other helper functions.
@@ -67,19 +68,92 @@ void setup() {
   Firebase.reconnectWiFi(true);
 }
 
+double get_distance(void){
+  return random(0,100) +0.17;
+}
+
+String generatePathToTag(int num, int count){
+  return "/tag"+String(num)+"/full history/test"+String(count);
+}
+
+String generateCurrentPath(int num){
+  return "/tag"+String(num)+"/current";
+}
+
+int count1 = 0;
+int count2 = 0;
+int count3 = 0;
 
 void loop()
 {
-
   // Firebase.ready() should be called repeatedly to handle authentication tasks.
 
   if (Firebase.ready())
   {
     taskCompleted = true;
-    Firebase.RTDB.setTimestamp(&fbdo, "/test/timestamp1");
-    double flop = Firebase.RTDB.getDouble(&fbdo, "/test/timestamp1");
-    Serial.printf("Get timestamp... %s\n", Firebase.RTDB.getDouble(&fbdo, "/test/timestamp1"));
-    sleep(10);
+    int random_test = random(1,4);
+    if (random_test == 1){
+      
+      String path = generatePathToTag(random_test,count1);
+      String currentPath = generateCurrentPath(1);
+
+      Firebase.RTDB.setTimestamp(&fbdo, currentPath+"/timestamp");
+      Firebase.RTDB.setTimestamp(&fbdo, path+"/timestamp");
+      float distance1 = random(0,100)+0.17;
+      float distance2 = random(0,100)+0.17;
+      float distance3 = random(0,100)+0.17;
+      Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon1", distance1);
+      Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon2", distance2);
+      Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon3", distance3);
+
+ 
+      Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon1", distance1);
+      Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon2", distance2);
+      Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon3", distance3);
+      count1 ++;
+
+    }
+    if (random_test == 2){
+      String path = generatePathToTag(random_test,count2);
+      String currentPath = generateCurrentPath(2);
+
+      Firebase.RTDB.setTimestamp(&fbdo, currentPath+"/timestamp");
+      Firebase.RTDB.setTimestamp(&fbdo, path+"/timestamp");
+      float distance1 = random(0,100)+0.17;
+      float distance2 = random(0,100)+0.17;
+      float distance3 = random(0,100)+0.17;
+      Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon1", distance1);
+      Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon2", distance2);
+      Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon3", distance3);
+
+
+      Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon1", distance1);
+      Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon2", distance2);
+      Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon3", distance3);
+
+      count2 ++;
+    }
+
+    if (random_test == 3){
+      String path = generatePathToTag(random_test,count3);
+      String currentPath = generateCurrentPath(2);
+      Firebase.RTDB.setTimestamp(&fbdo, currentPath+"/timestamp");
+      Firebase.RTDB.setTimestamp(&fbdo, path+"/timestamp");
+      float distance1 = random(0,100)+0.17;
+      float distance2 = random(0,100)+0.17;
+      float distance3 = random(0,100)+0.17;
+      Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon1", distance1);
+      Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon2", distance2);
+      Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon3", distance3);
+
+
+      Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon1", distance1);
+      Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon2", distance2);
+      Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon3", distance3);
+      count3 ++;
+    }
+
+    sleep(20);
 /***
 
     Serial.printf("Set timestamp... %s\n", Firebase.RTDB.setTimestamp(&fbdo, "/test/timestamp") ? "ok" : fbdo.errorReason().c_str());
