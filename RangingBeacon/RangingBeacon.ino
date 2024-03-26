@@ -16,6 +16,8 @@ extern SPISettings _fastSPI;
 #define RESP_MSG_TS_LEN 4
 #define POLL_RX_TO_RESP_TX_DLY_UUS 500
 
+#define BEACON_ID 0
+
 /* Default communication configuration. We use default non-STS DW mode. */
 static dwt_config_t config = {
     5,                /* Channel number. */
@@ -33,13 +35,38 @@ static dwt_config_t config = {
     DWT_PDOA_M0       /* PDOA mode off */
 };
 
-static uint8_t rx_poll_msg[3][12] = {{0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '0', 0xE0, 0, 0},
-                                     {0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '1', 0xE0, 0, 0},
-                                     {0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '2', 0xE0, 0, 0}};
+// static uint8_t rx_poll_msg[3][12] = {{0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '0', 0xE0, 0, 0},
+//                                      {0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '1', 0xE0, 0, 0},
+//                                      {0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '2', 0xE0, 0, 0}};
+static uint8_t rx_poll_msg[3][3][12] = {
+                                  {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '0', 0xE0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '1', 0xE0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '2', 0xE0, 0, 0}},
+                                  {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '0', 0xE0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '1', 0xE0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '2', 0xE0, 0, 0}},
+                                  {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '0', 0xE0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '1', 0xE0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '2', 0xE0, 0, 0}}
+                                  
+};
+
 //static uint8_t rx_poll_msg[] = {0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '2', 0xE0, 0, 0};
-static uint8_t tx_resp_msg[3][20] = {{0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '0', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                     {0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '1', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                     {0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+// static uint8_t tx_resp_msg[3][20] = {{0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '0', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+//                                      {0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '1', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+//                                      {0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+
+static uint8_t tx_resp_msg[3][3][20] = {
+                                  {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '0', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '1', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+                                  {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '0', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '1', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+                                  {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '0', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '1', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}
+};
 
 //static uint8_t tx_resp_msg1[][] = {0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static uint8_t frame_seq_nb = 0;
@@ -127,7 +154,7 @@ if (status_reg & SYS_STATUS_RXFCG_BIT_MASK)
        * As the sequence number field of the frame is not relevant, it is cleared to simplify the validation of the frame. */
       rx_buffer[ALL_MSG_SN_IDX] = 0;
       for(i = 0; i <= 2; i++) {
-      if (memcmp(rx_buffer, rx_poll_msg[i], ALL_MSG_COMMON_LEN) == 0)
+      if (memcmp(rx_buffer, rx_poll_msg[i][BEACON_ID], ALL_MSG_COMMON_LEN) == 0)
       {
         uint32_t resp_tx_time;
         int ret;
@@ -143,13 +170,13 @@ if (status_reg & SYS_STATUS_RXFCG_BIT_MASK)
         resp_tx_ts = (((uint64_t)(resp_tx_time & 0xFFFFFFFEUL)) << 8) + TX_ANT_DLY;
 
         /* Write all timestamps in the final message. See NOTE 8 below. */
-        resp_msg_set_ts(&tx_resp_msg[i][RESP_MSG_POLL_RX_TS_IDX], poll_rx_ts);
-        resp_msg_set_ts(&tx_resp_msg[i][RESP_MSG_RESP_TX_TS_IDX], resp_tx_ts);
+        resp_msg_set_ts(&tx_resp_msg[i][BEACON_ID][RESP_MSG_POLL_RX_TS_IDX], poll_rx_ts);
+        resp_msg_set_ts(&tx_resp_msg[i][BEACON_ID][RESP_MSG_RESP_TX_TS_IDX], resp_tx_ts);
 
         /* Write and send the response message. See NOTE 9 below. */
-        tx_resp_msg[0][ALL_MSG_SN_IDX] = frame_seq_nb;
-        dwt_writetxdata(sizeof(tx_resp_msg[i]), tx_resp_msg[0], 0); /* Zero offset in TX buffer. */
-        dwt_writetxfctrl(sizeof(tx_resp_msg[i]), 0, 1);          /* Zero offset in TX buffer, ranging. */
+        tx_resp_msg[i][BEACON_ID][ALL_MSG_SN_IDX] = frame_seq_nb;
+        dwt_writetxdata(sizeof(tx_resp_msg[i][BEACON_ID]), tx_resp_msg[i][BEACON_ID], 0); /* Zero offset in TX buffer. */
+        dwt_writetxfctrl(sizeof(tx_resp_msg[i][BEACON_ID]), 0, 1);          /* Zero offset in TX buffer, ranging. */
         ret = dwt_starttx(DWT_START_TX_DELAYED);
 
 
