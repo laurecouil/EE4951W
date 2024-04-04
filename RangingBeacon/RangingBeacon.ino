@@ -16,8 +16,8 @@ extern SPISettings _fastSPI;
 #define RESP_MSG_TS_LEN 4
 #define POLL_RX_TO_RESP_TX_DLY_UUS 500
 
-#define BEACON_ID 0
-#define NUM_BEAC 4
+#define BEACON_ID 1
+#define NUM_TAG 3
 
 /* Default communication configuration. We use default non-STS DW mode. */
 static dwt_config_t config = {
@@ -164,7 +164,7 @@ if (status_reg & SYS_STATUS_RXFCG_BIT_MASK)
       /* Check that the frame is a poll sent by "SS TWR initiator" example.
        * As the sequence number field of the frame is not relevant, it is cleared to simplify the validation of the frame. */
       rx_buffer[ALL_MSG_SN_IDX] = 0;
-      for(int i = 0; i < NUM_BEAC; i++) {
+      for(int i = 0; i < NUM_TAG; i++) {
       if (memcmp(rx_buffer, rx_poll_msg[i][BEACON_ID], ALL_MSG_COMMON_LEN) == 0)
       {
         uint32_t resp_tx_time;

@@ -16,7 +16,7 @@
 #define RESP_RX_TIMEOUT_UUS  400
 
 #define NUM_BEAC 4
-#define TAG_ID 0
+#define TAG_ID 1
 
 /* Default communication configuration. We use default non-STS DW mode. */
 static dwt_config_t config = {
@@ -203,9 +203,10 @@ void loop()
         snprintf(dist_str, sizeof(dist_str), "DIST: %3.2f m", distance);
         test_run_info((unsigned char *)dist_str);
         distances_now[i] = distance;
+        i++;
       }
     }
-    i++;
+    
   }
   // else if (status_reg & SYS_STATUS_ALL_RX_TO) {
   //   Serial.println("Timeout");
