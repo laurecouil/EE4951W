@@ -15,7 +15,7 @@
 #define POLL_TX_TO_RESP_RX_DLY_UUS 240
 #define RESP_RX_TIMEOUT_UUS  400
 
-#define NUM_BEAC 3
+#define NUM_BEAC 4
 #define TAG_ID 0
 
 /* Default communication configuration. We use default non-STS DW mode. */
@@ -35,29 +35,39 @@ static dwt_config_t config = {
     DWT_PDOA_M0       /* PDOA mode off */
 };
 
-static uint8_t tx_poll_msg[3][3][12] = {
+static uint8_t tx_poll_msg[3][4][12] = {
                                   {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '0', 0xE0, 0, 0},
                                   {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '1', 0xE0, 0, 0},
-                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '2', 0xE0, 0, 0}},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '2', 0xE0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '3', 0xE0, 0, 0}},
+
                                   {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '0', 0xE0, 0, 0},
                                   {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '1', 0xE0, 0, 0},
-                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '2', 0xE0, 0, 0}},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '2', 0xE0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '3', 0xE0, 0, 0}},
+
                                   {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '0', 0xE0, 0, 0},
                                   {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '1', 0xE0, 0, 0},
-                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '2', 0xE0, 0, 0}}
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '2', 0xE0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '3', 0xE0, 0, 0}}
                                   
 };
 //static uint8_t tx_poll_msg[][] = {0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '2', 0xE0, 0, 0};
-static uint8_t rx_resp_msg[3][3][20] = {
+static uint8_t rx_resp_msg[3][4][20] = {
                                   {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '0', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                                   {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '1', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '3', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+
                                   {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '0', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                                   {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '1', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '3', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+
                                   {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '0', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                                   {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '1', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '3', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}
 };
 
 //static uint8_t rx_resp_msg1[] = {0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -68,7 +78,7 @@ static double tof;
 static double distance;
 extern dwt_txconfig_t txconfig_options;
 
-int distances_now[3] = {0,0,0};
+float distances_now[4] = {0,0,0,0};
 
 void setup()
 {
@@ -209,9 +219,9 @@ void loop()
   }
 
   /* Execute a delay between ranging exchanges. */
-  Sleep(RNG_DELAY_MS);
+  //Sleep(RNG_DELAY_MS);
 }
-for(int it = 0; it < 3; it++) {
+for(int it = 0; it < NUM_BEAC; it++) {
   Serial.print(it);
   Serial.print(", ");
   Serial.println(distances_now[it]);

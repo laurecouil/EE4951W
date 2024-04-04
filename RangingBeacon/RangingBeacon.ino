@@ -17,6 +17,7 @@ extern SPISettings _fastSPI;
 #define POLL_RX_TO_RESP_TX_DLY_UUS 500
 
 #define BEACON_ID 0
+#define NUM_BEAC 4
 
 /* Default communication configuration. We use default non-STS DW mode. */
 static dwt_config_t config = {
@@ -38,16 +39,21 @@ static dwt_config_t config = {
 // static uint8_t rx_poll_msg[3][12] = {{0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '0', 0xE0, 0, 0},
 //                                      {0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '1', 0xE0, 0, 0},
 //                                      {0x41, 0x88, 0, 0xCA, 0xDE, 'T', 'A', 'G', '2', 0xE0, 0, 0}};
-static uint8_t rx_poll_msg[3][3][12] = {
+static uint8_t rx_poll_msg[3][4][12] = {
                                   {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '0', 0xE0, 0, 0},
                                   {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '1', 0xE0, 0, 0},
-                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '2', 0xE0, 0, 0}},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '2', 0xE0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '3', 0xE0, 0, 0}},
+
                                   {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '0', 0xE0, 0, 0},
                                   {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '1', 0xE0, 0, 0},
-                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '2', 0xE0, 0, 0}},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '2', 0xE0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '3', 0xE0, 0, 0}},
+
                                   {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '0', 0xE0, 0, 0},
                                   {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '1', 0xE0, 0, 0},
-                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '2', 0xE0, 0, 0}}
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '2', 0xE0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '3', 0xE0, 0, 0}}
                                   
 };
 
@@ -56,16 +62,21 @@ static uint8_t rx_poll_msg[3][3][12] = {
 //                                      {0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '1', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 //                                      {0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
-static uint8_t tx_resp_msg[3][3][20] = {
+static uint8_t tx_resp_msg[3][4][20] = {
                                   {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '0', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                                   {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '1', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '0', '3', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+
                                   {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '0', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                                   {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '1', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '1', '3', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+
                                   {{0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '0', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                                   {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '1', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                  {0x41, 0x88, 0, 0xCA, 0xDE, 'I', 'D', '2', '3', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}
 };
 
 //static uint8_t tx_resp_msg1[][] = {0x41, 0x88, 0, 0xCA, 0xDE, 'B', 'E', 'A', '2', 0xE1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -153,7 +164,7 @@ if (status_reg & SYS_STATUS_RXFCG_BIT_MASK)
       /* Check that the frame is a poll sent by "SS TWR initiator" example.
        * As the sequence number field of the frame is not relevant, it is cleared to simplify the validation of the frame. */
       rx_buffer[ALL_MSG_SN_IDX] = 0;
-      for(i = 0; i <= 2; i++) {
+      for(int i = 0; i < NUM_BEAC; i++) {
       if (memcmp(rx_buffer, rx_poll_msg[i][BEACON_ID], ALL_MSG_COMMON_LEN) == 0)
       {
         uint32_t resp_tx_time;
@@ -210,4 +221,4 @@ if (status_reg & SYS_STATUS_RXFCG_BIT_MASK)
     }
 }
 
-  }
+  
