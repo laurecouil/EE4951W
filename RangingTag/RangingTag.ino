@@ -1,4 +1,33 @@
+#include <WiFi.h>
+
+
 #include "dw3000.h"
+
+#include <Arduino.h>
+//#include <Wifi.h>
+#include <Firebase_ESP_Client.h>
+#include <string>
+using namespace std;
+#include "addons/TokenHelper.h"
+#include "addons/RTDBHelper.h"
+
+// Insert your network credentials
+#define WIFI_SSID "cse-tech"
+#define WIFI_PASSWORD "ZestarYum21"
+
+#define API_KEY "AIzaSyBC_nyH5JY1v7wx3XguMSXkZ8TJ2n1OVs4"
+#define DATABASE_URL "https://esp32-firebase-demo-664b6-default-rtdb.firebaseio.com/"
+
+FirebaseData fbdo;
+
+FirebaseAuth auth;
+FirebaseConfig config;
+bool taskCompleted = false;
+
+unsigned long sendDataPrevMillis = 0;
+//int count = 0;
+bool signupOK = false;
+const char* deviceID = "ESP32_DEVICE_1";
 
 #define PIN_RST 27
 #define PIN_IRQ 34
@@ -19,7 +48,7 @@
 #define TAG_ID 1
 
 /* Default communication configuration. We use default non-STS DW mode. */
-static dwt_config_t config = {
+static dwt_config_t dwconfig = {
     5,                /* Channel number. */
     DWT_PLEN_128,     /* Preamble length. Used in TX only. */
     DWT_PAC8,         /* Preamble acquisition chunk size. Used in RX only. */
@@ -75,14 +104,48 @@ static uint8_t frame_seq_nb = 0;
 static uint8_t rx_buffer[20];
 static uint32_t status_reg = 0;
 static double tof;
-static double distance;
+static double curDistance;
 extern dwt_txconfig_t txconfig_options;
 
 float distances_now[4] = {0,0,0,0};
 
+int testCount = 0;
+String generatePathToTag(int num, int count){
+  return "/tag"+String(num)+"/full history/test"+String(count);
+}
+
+String generateCurrentPath(int num){
+  return "/tag"+String(num)+"/current";
+}
+
 void setup()
 {
   UART_init();
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    //Serial.print(".");
+    delay(300);
+  }
+
+   /* Assign the api key (required) */
+  config.api_key = API_KEY;
+
+  /* Assign the RTDB URL (required) */
+  config.database_url = DATABASE_URL;
+
+  if (Firebase.signUp(&config, &auth, "", "")) {
+    //Serial.println("ok");
+    signupOK = true;
+  } else {
+    //Serial.printf("%s\n", config.signer.signupError.message.c_str());
+  }
+
+    /* Assign the callback function for the long running token generation task */
+  config.token_status_callback = tokenStatusCallback; // see addons/TokenHelper.h
+
+  Firebase.begin(&config, &auth);
+  Firebase.reconnectWiFi(true);
 
   spiBegin(PIN_IRQ, PIN_RST);
   spiSelect(PIN_SS);
@@ -107,7 +170,7 @@ void setup()
   dwt_setleds(DWT_LEDS_ENABLE | DWT_LEDS_INIT_BLINK);
 
   /* Configure DW IC. See NOTE 6 below. */
-  if (dwt_configure(&config)) // if the dwt_configure returns DWT_ERROR either the PLL or RX calibration has failed the host should reset the device
+  if (dwt_configure(&dwconfig)) // if the dwt_configure returns DWT_ERROR either the PLL or RX calibration has failed the host should reset the device
   {
     UART_puts("CONFIG FAILED\r\n");
     while (1)
@@ -196,14 +259,19 @@ void loop()
         rtd_resp = resp_tx_ts - poll_rx_ts;
 
         tof = ((rtd_init - rtd_resp * (1 - clockOffsetRatio)) / 2.0) * DWT_TIME_UNITS;
-        distance = tof * SPEED_OF_LIGHT;
+        curDistance = tof * SPEED_OF_LIGHT;
 
         /* Display computed distance on LCD. */
         Serial.println(i);
-        snprintf(dist_str, sizeof(dist_str), "DIST: %3.2f m", distance);
+        snprintf(dist_str, sizeof(dist_str), "DIST: %3.2f m", curDistance);
         test_run_info((unsigned char *)dist_str);
-        distances_now[i] = distance;
-        i++;
+        if (curDistance > 0) {
+          distances_now[i] = curDistance;
+          i++; 
+        } else {
+          Serial.println("Negative Value");
+        }
+        
       }
     }
     
@@ -229,4 +297,25 @@ for(int it = 0; it < NUM_BEAC; it++) {
 }
 
 //Transmit data to server
+
+  if(Firebase.ready()) {
+    taskCompleted = true;
+    String path = generatePathToTag(TAG_ID, testCount);
+    String currentPath = generateCurrentPath(TAG_ID);
+
+    Firebase.RTDB.setTimestamp(&fbdo, currentPath+"/timestamp");
+    Firebase.RTDB.setTimestamp(&fbdo, path+"/timestamp");
+
+    Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon0", distances_now[0]);
+    Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon1", distances_now[1]);
+    Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon2", distances_now[2]);
+    Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon3", distances_now[3]);
+    
+    Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon0", distances_now[0]);
+    Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon1", distances_now[1]);
+    Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon2", distances_now[2]);
+    Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon3", distances_now[3]);
+    testCount++;
+    sleep(10);
+  }
 }
