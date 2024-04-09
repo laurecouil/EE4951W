@@ -45,7 +45,7 @@ const char* deviceID = "ESP32_DEVICE_1";
 #define RESP_RX_TIMEOUT_UUS  400
 
 #define NUM_BEAC 4
-#define TAG_ID 1
+#define TAG_ID 0
 
 /* Default communication configuration. We use default non-STS DW mode. */
 static dwt_config_t dwconfig = {
@@ -195,12 +195,40 @@ void setup()
 
   Serial.println("Range RX");
   Serial.println("Setup over........");
+  // sendDataPrevMillis = millis();
 }
 
 void loop()
 {
+  // if (millis() >= sendDataPrevMillis + 1000) {
+  if(Firebase.ready()) {
+    // Serial.println("Entering WiFi Section");
+    taskCompleted = true;
+    String path = generatePathToTag(TAG_ID, testCount);
+    String currentPath = generateCurrentPath(TAG_ID);
+
+    Firebase.RTDB.setTimestamp(&fbdo, currentPath+"/timestamp");
+    Firebase.RTDB.setTimestamp(&fbdo, path+"/timestamp");
+
+    Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon0", distances_now[0]);
+    Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon1", distances_now[1]);
+    Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon2", distances_now[2]);
+    Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon3", distances_now[3]);
+    
+    Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon0", distances_now[0]);
+    Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon1", distances_now[1]);
+    Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon2", distances_now[2]);
+    Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon3", distances_now[3]);
+    testCount++;
+    sleep(1);
+    // sendDataPrevMillis = millis() + 1000;
+    // Serial.println("Sent data to Firebase");
+  }
+  // }
+
   int i = 0;
   while(i < NUM_BEAC) {
+    delay(10);
   /* Write frame data to DW IC and prepare transmission. See NOTE 7 below. */
  // Serial.println(dwt_readtxtimestamplo32());
   tx_poll_msg[TAG_ID][i][ALL_MSG_SN_IDX] = frame_seq_nb;
@@ -238,6 +266,8 @@ void loop()
       rx_buffer[ALL_MSG_SN_IDX] = 0;
       if (memcmp(rx_buffer, rx_resp_msg[TAG_ID][i], ALL_MSG_COMMON_LEN) == 0)
       {
+        // Serial.println(i);
+        
         uint32_t poll_tx_ts, resp_rx_ts, poll_rx_ts, resp_tx_ts;
         int32_t rtd_init, rtd_resp;
         float clockOffsetRatio;
@@ -262,14 +292,16 @@ void loop()
         curDistance = tof * SPEED_OF_LIGHT;
 
         /* Display computed distance on LCD. */
-        Serial.println(i);
-        snprintf(dist_str, sizeof(dist_str), "DIST: %3.2f m", curDistance);
-        test_run_info((unsigned char *)dist_str);
+        // Serial.println(i);
+        // snprintf(dist_str, sizeof(dist_str), "DIST: %3.2f m", curDistance);
+        // test_run_info((unsigned char *)dist_str);
         if (curDistance > 0) {
           distances_now[i] = curDistance;
           i++; 
         } else {
-          Serial.println("Negative Value");
+          Serial.println(i);
+          Serial.print(rx_buffer[7]);
+          Serial.println(rx_buffer[8]);
         }
         
       }
@@ -290,32 +322,13 @@ void loop()
   /* Execute a delay between ranging exchanges. */
   //Sleep(RNG_DELAY_MS);
 }
-for(int it = 0; it < NUM_BEAC; it++) {
-  Serial.print(it);
-  Serial.print(", ");
-  Serial.println(distances_now[it]);
-}
+// for(int it = 0; it < NUM_BEAC; it++) {
+//   Serial.print(it);
+//   Serial.print(", ");
+//   Serial.println(distances_now[it]);
+// }
 
 //Transmit data to server
 
-  if(Firebase.ready()) {
-    taskCompleted = true;
-    String path = generatePathToTag(TAG_ID, testCount);
-    String currentPath = generateCurrentPath(TAG_ID);
 
-    Firebase.RTDB.setTimestamp(&fbdo, currentPath+"/timestamp");
-    Firebase.RTDB.setTimestamp(&fbdo, path+"/timestamp");
-
-    Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon0", distances_now[0]);
-    Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon1", distances_now[1]);
-    Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon2", distances_now[2]);
-    Firebase.RTDB.setFloat(&fbdo, currentPath+"/DistanceToBeacon3", distances_now[3]);
-    
-    Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon0", distances_now[0]);
-    Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon1", distances_now[1]);
-    Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon2", distances_now[2]);
-    Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon3", distances_now[3]);
-    testCount++;
-    sleep(10);
-  }
 }
