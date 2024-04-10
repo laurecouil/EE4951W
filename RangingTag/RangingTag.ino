@@ -228,7 +228,7 @@ void loop()
 
   int i = 0;
   while(i < NUM_BEAC) {
-    delay(10);
+    delay(10); // EDIT FOR DIFFERENT TAGS TO REDUCE INTERFERANCE
   /* Write frame data to DW IC and prepare transmission. See NOTE 7 below. */
  // Serial.println(dwt_readtxtimestamplo32());
   tx_poll_msg[TAG_ID][i][ALL_MSG_SN_IDX] = frame_seq_nb;
@@ -322,11 +322,11 @@ void loop()
   /* Execute a delay between ranging exchanges. */
   //Sleep(RNG_DELAY_MS);
 }
-// for(int it = 0; it < NUM_BEAC; it++) {
-//   Serial.print(it);
-//   Serial.print(", ");
-//   Serial.println(distances_now[it]);
-// }
+for(int it = 0; it < NUM_BEAC; it++) {
+  Serial.print(it);
+  Serial.print(", ");
+  Serial.println(distances_now[it]);
+}
 
 //Transmit data to server
 

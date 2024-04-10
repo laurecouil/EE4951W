@@ -6,9 +6,18 @@ extern SPISettings _fastSPI;
 #define PIN_RST 27
 #define PIN_IRQ 34
 #define PIN_SS 4
+//
 
-#define TX_ANT_DLY 16385
-#define RX_ANT_DLY 16385
+/*
+ * TESTED ON WITH TAG 0
+ * BEACON    0      1      2      3  
+ * TX:     16405  16400  16375  16385
+ * RX:     16405  16400  16375  16385
+ */
+
+
+#define TX_ANT_DLY 16385 //16385 
+#define RX_ANT_DLY 16385 //16385
 #define ALL_MSG_COMMON_LEN 10
 #define ALL_MSG_SN_IDX 2
 #define RESP_MSG_POLL_RX_TS_IDX 10
@@ -16,7 +25,7 @@ extern SPISettings _fastSPI;
 #define RESP_MSG_TS_LEN 4
 #define POLL_RX_TO_RESP_TX_DLY_UUS 500
 
-#define BEACON_ID 1
+#define BEACON_ID 3
 #define NUM_TAG 3
 
 /* Default communication configuration. We use default non-STS DW mode. */
