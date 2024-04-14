@@ -15,8 +15,8 @@ using namespace std;
 #define WIFI_SSID "cse-tech"
 #define WIFI_PASSWORD "ZestarYum21"
 
-#define API_KEY "AIzaSyBC_nyH5JY1v7wx3XguMSXkZ8TJ2n1OVs4"
-#define DATABASE_URL "https://esp32-firebase-demo-664b6-default-rtdb.firebaseio.com/"
+#define API_KEY "AIzaSyDRe1FVl_h_aRYJxB0ivJ9geN_JLyU52kw"
+#define DATABASE_URL "https://object-tracking-firebase-default-rtdb.firebaseio.com/"
 
 FirebaseData fbdo;
 
@@ -33,9 +33,16 @@ const char* deviceID = "ESP32_DEVICE_1";
 #define PIN_IRQ 34
 #define PIN_SS 4
 
+/*
+ * TESTED ON WITH TAG 0
+ * TAG       0      1      2        
+ * TX:     16385  16430  16375  
+ * RX:     16385  16430  16375  
+ */
+
 #define RNG_DELAY_MS 1000
-#define TX_ANT_DLY 16385
-#define RX_ANT_DLY 16385
+#define TX_ANT_DLY 16430
+#define RX_ANT_DLY 16430
 #define ALL_MSG_COMMON_LEN 10
 #define ALL_MSG_SN_IDX 2
 #define RESP_MSG_POLL_RX_TS_IDX 10
@@ -45,7 +52,7 @@ const char* deviceID = "ESP32_DEVICE_1";
 #define RESP_RX_TIMEOUT_UUS  400
 
 #define NUM_BEAC 4
-#define TAG_ID 0
+#define TAG_ID 1
 
 /* Default communication configuration. We use default non-STS DW mode. */
 static dwt_config_t dwconfig = {
@@ -108,6 +115,12 @@ static double curDistance;
 extern dwt_txconfig_t txconfig_options;
 
 float distances_now[4] = {0,0,0,0};
+
+float beac0_buf[10] = {0};
+float beac1_buf[10] = {0};
+float beac2_buf[10] = {0};
+float beac3_buf[10] = {0};
+int index = 0;
 
 int testCount = 0;
 String generatePathToTag(int num, int count){
@@ -202,7 +215,7 @@ void loop()
 {
   // if (millis() >= sendDataPrevMillis + 1000) {
   if(Firebase.ready()) {
-    // Serial.println("Entering WiFi Section");
+    Serial.println("Entering WiFi Section");
     taskCompleted = true;
     String path = generatePathToTag(TAG_ID, testCount);
     String currentPath = generateCurrentPath(TAG_ID);
@@ -220,7 +233,8 @@ void loop()
     Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon2", distances_now[2]);
     Firebase.RTDB.setFloat(&fbdo, path+"/DistanceToBeacon3", distances_now[3]);
     testCount++;
-    sleep(1);
+    //delay(750);
+    //sleep(1);
     // sendDataPrevMillis = millis() + 1000;
     // Serial.println("Sent data to Firebase");
   }
@@ -228,6 +242,9 @@ void loop()
 
   int i = 0;
   while(i < NUM_BEAC) {
+    // 9 for tag 0
+    // 10 for tag 1
+    // 4 for tag 2
     delay(10); // EDIT FOR DIFFERENT TAGS TO REDUCE INTERFERANCE
   /* Write frame data to DW IC and prepare transmission. See NOTE 7 below. */
  // Serial.println(dwt_readtxtimestamplo32());
@@ -329,6 +346,6 @@ for(int it = 0; it < NUM_BEAC; it++) {
 }
 
 //Transmit data to server
-
+// sleep(1);
 
 }
