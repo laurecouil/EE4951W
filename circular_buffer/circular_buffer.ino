@@ -4,6 +4,7 @@
 #include "dw3000.h"
 
 #include <Arduino.h>
+#include <algorithm>
 //#include <Wifi.h>
 #include <Firebase_ESP_Client.h>
 #include <string>
@@ -41,18 +42,18 @@ const char* deviceID = "ESP32_DEVICE_1";
  */
 
 #define RNG_DELAY_MS 1000
-#define TX_ANT_DLY 16430
-#define RX_ANT_DLY 16430
+#define TX_ANT_DLY 16360
+#define RX_ANT_DLY 16360
 #define ALL_MSG_COMMON_LEN 10
 #define ALL_MSG_SN_IDX 2
 #define RESP_MSG_POLL_RX_TS_IDX 10
 #define RESP_MSG_RESP_TX_TS_IDX 14
 #define RESP_MSG_TS_LEN 4
-#define POLL_TX_TO_RESP_RX_DLY_UUS 240
-#define RESP_RX_TIMEOUT_UUS  400
+#define POLL_TX_TO_RESP_RX_DLY_UUS 240 //240
+#define RESP_RX_TIMEOUT_UUS  400 //400
 
 #define NUM_BEAC 4
-#define TAG_ID 1
+#define TAG_ID 0
 
 /* Default communication configuration. We use default non-STS DW mode. */
 static dwt_config_t dwconfig = {
@@ -223,7 +224,7 @@ void loop()
     // 9 for tag 0
     // 10 for tag 1
     // 4 for tag 2
-    delay(10); // EDIT FOR DIFFERENT TAGS TO REDUCE INTERFERANCE
+    delay(9); // EDIT FOR DIFFERENT TAGS TO REDUCE INTERFERANCE
 
   /* Write frame data to DW IC and prepare transmission. See NOTE 7 below. */
 
@@ -235,7 +236,7 @@ void loop()
   /* Start transmission, indicating that a response is expected so that reception is enabled automatically after the frame is sent and the delay
    * set by dwt_setrxaftertxdelay() has elapsed. */
   dwt_starttx(DWT_START_TX_IMMEDIATE | DWT_RESPONSE_EXPECTED);
-
+  // Serial.println("started tx");
   /* We assume that the transmission is achieved correctly, poll for reception of a frame or error/timeout. See NOTE 8 below. */
   while (!((status_reg = dwt_read32bitreg(SYS_STATUS_ID)) & (SYS_STATUS_RXFCG_BIT_MASK | SYS_STATUS_ALL_RX_TO | SYS_STATUS_ALL_RX_ERR)))
   {
@@ -293,6 +294,8 @@ void loop()
         // test_run_info((unsigned char *)dist_str);
         if (curDistance > 0) {
           distances_now[i] = curDistance;
+          // Serial.println("logged");
+          // Serial.println(i);
           i++; 
         } else {
           Serial.println(i);
@@ -304,10 +307,16 @@ void loop()
     }
     
   }
+  else if (status_reg & SYS_STATUS_ALL_RX_TO) {
+    Serial.println("Timeout");
+    Serial.println(i);
+    dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_ALL_RX_TO | SYS_STATUS_ALL_RX_ERR);
+
+  }
   else
   {
     /* Clear RX error/timeout events in the DW IC status register. */
-    //Serial.println("Error/Timeout");
+    Serial.println("Error/Timeout");
     dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_ALL_RX_TO | SYS_STATUS_ALL_RX_ERR);
   }
 
@@ -328,15 +337,24 @@ void loop()
   // Take average 
   // TODO: Could prob be moved into the data upload part of code since we only need the average when we are sending the data
   float avg[4]={0};
-  for(int s = 0; s < 10; s++) {
-    avg[0] += beac0_buf[s];
-    avg[1] += beac1_buf[s];
-    avg[2] += beac2_buf[s];
-    avg[3] += beac3_buf[s];
-  }
-  for (int a = 0; a < 4; a++) {
-    avg[a] = avg[a] / 10.0;
-  }
+  int n = sizeof(beac0_buf) / sizeof(beac0_buf[0]);
+  std::sort(beac0_buf, beac0_buf+n);
+  std::sort(beac1_buf, beac1_buf+n);
+  std::sort(beac2_buf, beac2_buf+n);
+  std::sort(beac3_buf, beac3_buf+n);
+  avg[0] = beac0_buf[n/2];
+  avg[1] = beac1_buf[n/2];
+  avg[2] = beac2_buf[n/2];
+  avg[3] = beac3_buf[n/2];
+  // for(int s = 0; s < 10; s++) {
+  //   avg[0] += beac0_buf[s];
+  //   avg[1] += beac1_buf[s];
+  //   avg[2] += beac2_buf[s];
+  //   avg[3] += beac3_buf[s];
+  // }
+  // for (int a = 0; a < 4; a++) {
+  //   avg[a] = avg[a] / 10.0;
+  // }
 
   if (millis() > sendDataPrev ) {
     bool sentData = false;

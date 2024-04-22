@@ -11,21 +11,21 @@ extern SPISettings _fastSPI;
 /*
  * TESTED ON WITH TAG 0
  * BEACON    0      1      2      3  
- * TX:     16405  16400  16375  16385
- * RX:     16405  16400  16375  16385
+ * TX:     16385  16435  16375  16395
+ * RX:     16385  16435  16375  16395
  */
 
 
-#define TX_ANT_DLY 16385 //16385 
-#define RX_ANT_DLY 16385 //16385
+#define TX_ANT_DLY 16395 //16385 
+#define RX_ANT_DLY 16395 //16385
 #define ALL_MSG_COMMON_LEN 10
 #define ALL_MSG_SN_IDX 2
 #define RESP_MSG_POLL_RX_TS_IDX 10
 #define RESP_MSG_RESP_TX_TS_IDX 14
 #define RESP_MSG_TS_LEN 4
-#define POLL_RX_TO_RESP_TX_DLY_UUS 500
+#define POLL_RX_TO_RESP_TX_DLY_UUS 600 //500
 
-#define BEACON_ID 3
+#define BEACON_ID 2
 #define NUM_TAG 3
 
 /* Default communication configuration. We use default non-STS DW mode. */
@@ -152,11 +152,13 @@ void loop()
 {
   /* Activate reception immediately. */
   dwt_rxenable(DWT_START_RX_IMMEDIATE);
-
+  Serial.println("Top of loop");
   /* Poll for reception of a frame or error/timeout. See NOTE 6 below. */
   while (!((status_reg = dwt_read32bitreg(SYS_STATUS_ID)) & (SYS_STATUS_RXFCG_BIT_MASK | SYS_STATUS_ALL_RX_ERR)))
   {
+    
   };
+  Serial.println("received packet");
 if (status_reg & SYS_STATUS_RXFCG_BIT_MASK)
   {
     uint32_t frame_len;
@@ -176,6 +178,7 @@ if (status_reg & SYS_STATUS_RXFCG_BIT_MASK)
       for(int i = 0; i < NUM_TAG; i++) {
       if (memcmp(rx_buffer, rx_poll_msg[i][BEACON_ID], ALL_MSG_COMMON_LEN) == 0)
       {
+        Serial.println("responding");
         uint32_t resp_tx_time;
         int ret;
 

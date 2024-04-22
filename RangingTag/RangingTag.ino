@@ -41,8 +41,8 @@ const char* deviceID = "ESP32_DEVICE_1";
  */
 
 #define RNG_DELAY_MS 1000
-#define TX_ANT_DLY 16430
-#define RX_ANT_DLY 16430
+#define TX_ANT_DLY 164385
+#define RX_ANT_DLY 16385
 #define ALL_MSG_COMMON_LEN 10
 #define ALL_MSG_SN_IDX 2
 #define RESP_MSG_POLL_RX_TS_IDX 10
@@ -52,7 +52,7 @@ const char* deviceID = "ESP32_DEVICE_1";
 #define RESP_RX_TIMEOUT_UUS  400
 
 #define NUM_BEAC 4
-#define TAG_ID 1
+#define TAG_ID 0
 
 /* Default communication configuration. We use default non-STS DW mode. */
 static dwt_config_t dwconfig = {
@@ -245,7 +245,7 @@ void loop()
     // 9 for tag 0
     // 10 for tag 1
     // 4 for tag 2
-    delay(10); // EDIT FOR DIFFERENT TAGS TO REDUCE INTERFERANCE
+    delay(9); // EDIT FOR DIFFERENT TAGS TO REDUCE INTERFERANCE
   /* Write frame data to DW IC and prepare transmission. See NOTE 7 below. */
  // Serial.println(dwt_readtxtimestamplo32());
   tx_poll_msg[TAG_ID][i][ALL_MSG_SN_IDX] = frame_seq_nb;
@@ -256,7 +256,7 @@ void loop()
   /* Start transmission, indicating that a response is expected so that reception is enabled automatically after the frame is sent and the delay
    * set by dwt_setrxaftertxdelay() has elapsed. */
   dwt_starttx(DWT_START_TX_IMMEDIATE | DWT_RESPONSE_EXPECTED);
-
+  Serial.println("Sent");
   /* We assume that the transmission is achieved correctly, poll for reception of a frame or error/timeout. See NOTE 8 below. */
   while (!((status_reg = dwt_read32bitreg(SYS_STATUS_ID)) & (SYS_STATUS_RXFCG_BIT_MASK | SYS_STATUS_ALL_RX_TO | SYS_STATUS_ALL_RX_ERR)))
   {
@@ -315,6 +315,7 @@ void loop()
         if (curDistance > 0) {
           distances_now[i] = curDistance;
           i++; 
+          Serial.println("logged");
         } else {
           Serial.println(i);
           Serial.print(rx_buffer[7]);
